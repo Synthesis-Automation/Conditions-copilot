@@ -1,0 +1,4 @@
+pydantic>=2.6
+pandas>=2.1
+# rdkit-pypi is optional; uncomment to enable richer featurization
+# rdkit-pypi>=2022.9.5

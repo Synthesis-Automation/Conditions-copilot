@@ -1,0 +1,51 @@
+{
+  "reaction": {
+    "smiles": "Brc1ccccc1C(=O)C.Nc1ccccc1>>CC(=O)c1ccccc1Nc1ccccc1",
+    "type_hint": null
+  },
+  "context": {
+    "plugins_detected": [],
+    "plugin_confidence": 0.0
+  },
+  "capabilities": {
+    "tools": [
+      "featurize_basic",
+      "retrieve_neighbors",
+      "get_dicts",
+      "predict_yield",
+      "validate_proposals"
+    ],
+    "policies": {
+      "max_actions_per_cycle": 3,
+      "max_cycles": 4
+    }
+  },
+  "constraints": {
+    "metals_allowed": [
+      "Pd",
+      "Ni",
+      "Cu"
+    ],
+    "metal_blacklist": [],
+    "solvent_blacklist": [],
+    "env": "inert_required",
+    "temp_limits_C": {
+      "min": 20,
+      "max": 120
+    },
+    "time_limits_h": {
+      "max": 20
+    },
+    "safety_flags": [
+      "no_DMF_at>120C"
+    ]
+  },
+  "state": {
+    "cycle": 1,
+    "budget": {
+      "max_steps": 3,
+      "used": 0
+    }
+  },
+  "ask": "Classify \u2192 request minimal tools \u2192 action plan (<=3). JSON only."
+}

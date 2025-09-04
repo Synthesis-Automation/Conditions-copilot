@@ -1,0 +1,45 @@
+{
+  "classification": {
+    "name": "Buchwald C\u2013N (aryl bromide + aniline)",
+    "confidence": 0.87
+  },
+  "actions": [
+    {
+      "tool": "featurize_basic",
+      "args": {
+        "features": [
+          "HALIDE_CLASS",
+          "NUCLEOPHILE_CLASS",
+          "TPSA",
+          "logP",
+          "RING_STATS",
+          "C_N_FORMATION"
+        ]
+      },
+      "call_id": "A1"
+    },
+    {
+      "tool": "retrieve_neighbors",
+      "args": {
+        "k": 20,
+        "filters": {
+          "class_tags": [
+            "Ar\u2013Br",
+            "aniline"
+          ]
+        }
+      },
+      "call_id": "A2",
+      "depends_on": [
+        "A1"
+      ]
+    },
+    {
+      "tool": "get_dicts",
+      "args": {
+        "reaction_class": "Buchwald C\u2013N"
+      },
+      "call_id": "A3"
+    }
+  ]
+}
