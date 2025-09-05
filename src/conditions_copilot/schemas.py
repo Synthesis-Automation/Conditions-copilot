@@ -18,7 +18,7 @@ class Coverage(BaseModel):
 class Retrieval(BaseModel):
     neighbors: List[Neighbor]
     coverage: Coverage
-    negatives: List[Dict[str, Any]] = []
+    negatives: List[Dict[str, Any]] = Field(default_factory=list)
     note: Optional[str] = None
 
 class Dictionaries(BaseModel):

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conditions-copilot"
+version = "0.1.0"
+description = "Copilot-style, multi-iteration reaction condition recommender"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "pydantic>=2.6",
+  "pandas>=2.1",
+]
+authors = [
+  { name = "Conditions Copilot" }
+]
+
+[project.optional-dependencies]
+rdkit = [
+  "rdkit-pypi>=2022.9.5",
+]
+
+[project.scripts]
+conditions-copilot = "conditions_copilot.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
