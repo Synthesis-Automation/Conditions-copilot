@@ -31,7 +31,7 @@ if __name__ == "__main__":
     
     # 此处以 deepseek-r1 为例，可按需更换模型名称。
     completion = client.chat.completions.create(
-        model="deepseek-v3.1",
+        model="deepseek-r1-distill-qwen-7b",
         messages=[{"role": "user", "content": "9.9和9.11谁大"}],
     )
     print("最终答案：")

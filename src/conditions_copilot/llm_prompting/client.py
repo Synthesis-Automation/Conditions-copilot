@@ -19,18 +19,20 @@ def call_openai(payload: Dict[str, Any], system_txt: str, *,
                 temperature: float = 0.2) -> Dict[str, Any]:
     from openai import OpenAI
     # Support both OpenAI and Aliyun DashScope (OpenAI-compatible) envs, with hardcoded test fallback
-    api_key = (
-        os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("DASHSCOPE_API_KEY")
-        or DEFAULT_TEST_API_KEY
-    )
     # Resolve base URL precedence: explicit arg -> OPENAI_BASE_URL -> DASHSCOPE_BASE_URL -> test default
     env_base = os.environ.get("OPENAI_BASE_URL") or os.environ.get("DASHSCOPE_BASE_URL")
     resolved_base = base_url or env_base or DEFAULT_TEST_BASE_URL
+    is_dashscope = isinstance(resolved_base, str) and "dashscope.aliyuncs.com" in resolved_base
+    # Prefer provider-specific key based on base_url to avoid 401 with mismatched keys
+    if is_dashscope:
+        # Only accept DashScope key here; otherwise fall back to built-in test key
+        api_key = os.environ.get("DASHSCOPE_API_KEY") or DEFAULT_TEST_API_KEY
+    else:
+        api_key = os.environ.get("OPENAI_API_KEY") or DEFAULT_TEST_API_KEY
     client = OpenAI(api_key=api_key, base_url=resolved_base)
     messages = [
-        {"role": "system", "content": system_txt + "\nReturn strictly JSON only."},
-        {"role": "user", "content": json.dumps(payload)},
+        {"role": "system", "content": system_txt + "\nReturn strictly json only. Reply with a json object."},
+        {"role": "user", "content": "reply in json only.\n" + json.dumps(payload)},
     ]
     kwargs: Dict[str, Any] = {
         "model": model,

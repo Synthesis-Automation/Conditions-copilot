@@ -34,7 +34,7 @@ def main():
         resp = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "Return strictly JSON only."},
+                {"role": "system", "content": "Return strictly json only. Reply with a json object."},
                 {"role": "user", "content": json.dumps({"ping": True})},
             ],
             response_format={"type": "json_object"},
@@ -51,4 +51,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

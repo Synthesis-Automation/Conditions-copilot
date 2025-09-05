@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import os, json, subprocess, sys
 from typing import Optional, Dict, Any
 
@@ -23,7 +23,7 @@ except Exception:
 from .controller import build_discovery_payload, execute_actions
 from .schemas import ProposalsRequest
 from .tools import dicts as dicts_mod, validator
-from .llm_prompting.client import call_openai, DEFAULT_TEST_MODEL, DEFAULT_TEST_BASE_URL
+from .llm_prompting.client import call_openai
 
 
 def _read_text(path: str) -> str:
@@ -109,20 +109,20 @@ class ChatWindow(QMainWindow):
         # Transcript
         self.transcript = QPlainTextEdit(self)
         self.transcript.setReadOnly(True)
-        self.transcript.setPlaceholderText("System responses and tool results will appear here…")
+        self.transcript.setPlaceholderText("System responses and tool results will appear here鈥?)
         layout.addWidget(self.transcript, stretch=1)
 
         # Status row (paths/LLM)
         status_row = QHBoxLayout()
         self.lbl_llm = QLabel(self)
         self._refresh_status()
-        btn_dataset = QPushButton("Dataset…", self)
+        btn_dataset = QPushButton("Dataset鈥?, self)
         btn_dataset.clicked.connect(self.choose_dataset)
-        btn_dicts = QPushButton("Dictionaries…", self)
+        btn_dicts = QPushButton("Dictionaries鈥?, self)
         btn_dicts.clicked.connect(self.choose_dictdir)
-        btn_system = QPushButton("System…", self)
+        btn_system = QPushButton("System鈥?, self)
         btn_system.clicked.connect(self.choose_system)
-        btn_llm = QPushButton("LLM Cmd…", self)
+        btn_llm = QPushButton("LLM Cmd鈥?, self)
         btn_llm.clicked.connect(self.set_llm_cmd)
         for w in (self.lbl_llm, btn_dataset, btn_dicts, btn_system, btn_llm):
             status_row.addWidget(w)
@@ -132,7 +132,7 @@ class ChatWindow(QMainWindow):
         # Input row
         input_row = QHBoxLayout()
         self.input = QLineEdit(self)
-        self.input.setPlaceholderText("Enter reaction SMILES, then press Send…")
+        self.input.setPlaceholderText("Enter reaction SMILES, then press Send鈥?)
         self.btn_send = QPushButton("Send", self)
         self.btn_send.clicked.connect(self.on_send)
         input_row.addWidget(self.input, stretch=1)
@@ -142,16 +142,8 @@ class ChatWindow(QMainWindow):
         self.resize(900, 700)
 
     def _refresh_status(self):
-        if self.llm_cmd:
-            self.lbl_llm.setText("LLM: external command")
-        else:
-            model = os.environ.get("OPENAI_MODEL") or os.environ.get("DASHSCOPE_MODEL") or DEFAULT_TEST_MODEL
-            base_url = (
-                os.environ.get("OPENAI_BASE_URL")
-                or os.environ.get("DASHSCOPE_BASE_URL")
-                or DEFAULT_TEST_BASE_URL
-            )
-            self.lbl_llm.setText(f"LLM: API {model} @ {base_url}")
+        mode = "external" if self.llm_cmd else "paste"
+        self.lbl_llm.setText(f"LLM: {mode}")
 
     def _append(self, role: str, content: str):
         self.transcript.appendPlainText(f"[{role}]\n{content}\n")
@@ -180,16 +172,8 @@ class ChatWindow(QMainWindow):
         if ok:
             self.llm_cmd = text.strip()
             self._refresh_status()
-            if self.llm_cmd:
-                self._append("INFO", "LLM: external command")
-            else:
-                model = os.environ.get("OPENAI_MODEL") or os.environ.get("DASHSCOPE_MODEL") or DEFAULT_TEST_MODEL
-                base_url = (
-                    os.environ.get("OPENAI_BASE_URL")
-                    or os.environ.get("DASHSCOPE_BASE_URL")
-                    or DEFAULT_TEST_BASE_URL
-                )
-                self._append("INFO", f"LLM: API {model} @ {base_url}")
+            mode = "external" if self.llm_cmd else "paste"
+            self._append("INFO", f"LLM mode: {mode}")
 
     def on_send(self):
         rxn = self.input.text().strip()
@@ -232,7 +216,7 @@ class ChatWindow(QMainWindow):
                 "retrieval": retr,
                 "dictionaries": dicts,
                 "constraints": build_discovery_payload(rxn).get("constraints"),
-                "ask": ("Propose top 3 ConditionCore and full conditions; include 2×3 screening panel if weak support. "
+                "ask": ("Propose top 3 ConditionCore and full conditions; include 2脳3 screening panel if weak support. "
                          "Use only dictionary items. Return JSON only."),
             }
             req = ProposalsRequest(**req).model_dump(by_alias=True)

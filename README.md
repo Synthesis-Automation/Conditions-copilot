@@ -4,6 +4,7 @@ A Copilot-style, multi-iteration reaction condition recommender. The local app i
 bootstrapper + tool runner. The remote LLM does discovery/planning and calls your tools.
 
 ## Features
+
 - Universal discovery payload (reaction-agnostic).
 - Typed JSON schemas (Pydantic v2).
 - Tool stubs: `featurize_basic`, `retrieve_neighbors`, `get_dicts`, `predict_yield`, `validate_proposals`.
@@ -14,12 +15,14 @@ bootstrapper + tool runner. The remote LLM does discovery/planning and calls you
 ## Installation
 
 Option A — Editable install (recommended):
+
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows (PowerShell): .venv\Scripts\Activate.ps1
 pip install -e .
 ```
 
 Option B — Without install (use PYTHONPATH):
+
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows (PowerShell): .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -31,6 +34,7 @@ $env:PYTHONPATH = 'src'
 ```
 
 ## Quickstart
+
 ```bash
 # 1) Print a universal discovery payload for a reaction
 python -m conditions_copilot.cli discover --rxn "Brc1ccccc1C(=O)C.Nc1ccccc1>>CC(=O)c1ccccc1Nc1ccccc1"
@@ -43,6 +47,7 @@ To integrate an external LLM CLI (e.g., Codex), set `LLM_CMD` to a shell command
 that reads stdin and outputs JSON. The controller pipes the payload into it.
 
 ## Layout
+
 ```
 conditions-copilot/
   ├─ src/conditions_copilot/
@@ -67,16 +72,19 @@ conditions-copilot/
 ```
 
 ## Notes
+
 - RDKit is optional; if not present, `featurize_basic` returns minimal signals and the loop still works.
 - Replace demo neighbors with your dataset (CSV/Parquet) in `tools/retrieval.py`.
 - Tight schemas + validator keep the LLM honest (JSON-only, allow-lists, safety rules).
 
 ## GUI (Qt6)
+
 - Launch: `conditions-copilot-gui`
 - Layout: top transcript (system/tools/LLM responses), bottom input for your reaction SMILES.
 - LLM: set `LLM_CMD` or use the GUI “LLM Cmd…” button. If empty, the app prompts you to paste the JSON replies.
 
 ## OpenAI-Compatible Integration
+
 - The app talks to OpenAI-compatible chat completion APIs (OpenAI or Aliyun DashScope).
 - Set either:
   - `OPENAI_API_KEY` (+ optional `OPENAI_MODEL`, `OPENAI_BASE_URL`), or
@@ -97,5 +105,13 @@ $env:DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 ```
 
 ## Datasets
+
 - A small example dataset is provided at `examples/datasets/demo_neighbors.csv`.
 - CLI default `--dataset` points there; you can override with your own CSV.
+
+## LLM
+
+PowerShell:
+$env:DASHSCOPE_API_KEY = 'sk-f4207c24fda4439f8d8fd711da49cf8c'
+$env:DASHSCOPE_MODEL = 'deepseek-v3.1'
+$env:DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
