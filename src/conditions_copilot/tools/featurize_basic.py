@@ -181,4 +181,112 @@ def featurize_basic(smiles: str) -> Dict[str, Any]:
     feats["ECFP4_products_bits"] = _onbits(bv_p)
     feats["ECFP4_diff_bits"] = _onbits(bv_diff)
 
+    # Rule-oriented features inspired by Rule-conditions project
+    rule_feats: Dict[str, Any] = {"amine": None, "carboxylic_acid": None, "aryl_halide": None}
+
+    # Amine: degree of substitution, aromatic connections, simple pKa estimate, class label
+    def amine_features(m) -> Dict[str, Any] | None:
+        try:
+            for a in m.GetAtoms():
+                if a.GetSymbol() != "N":
+                    continue
+                # Skip amide/acid derivatives: N attached to carbonyl carbon
+                is_amide_like = False
+                for nb in a.GetNeighbors():
+                    if nb.GetSymbol() == "C":
+                        for nb2 in nb.GetNeighbors():
+                            if nb2.GetIdx() != a.GetIdx() and nb.GetBondBetweenAtom(nb.GetIdx(), nb2.GetIdx() if hasattr(nb, 'GetIdx') else nb2.GetIdx()):
+                                pass
+                        # Check if carbonyl C
+                        if any(b.GetBondTypeAsDouble() == 2.0 and (b.GetBeginAtomIdx() == nb.GetIdx() or b.GetEndAtomIdx() == nb.GetIdx()) for b in m.GetBonds() if (b.GetBeginAtom().GetIdx()==nb.GetIdx() or b.GetEndAtom().GetIdx()==nb.GetIdx())):
+                            is_amide_like = True
+                # amine-like N if not amide-like
+                deg = sum(1 for nb in a.GetNeighbors() if nb.GetAtomicNum() > 1 and nb.GetSymbol() != 'H')
+                arom_conn = sum(1 for nb in a.GetNeighbors() if nb.GetIsAromatic())
+                cls = "aromatic amine" if arom_conn > 0 else "aliphatic amine"
+                # simple pKa estimate
+                base_pka = 10.6 if cls == "aliphatic amine" else 5.1
+                adjust = 0.5 if deg == 1 else (0.0 if deg == 2 else (-0.5 if deg == 3 else 0.0))
+                pka = base_pka + adjust - 1.0 * arom_conn
+                return {
+                    "degree_of_substitution": deg,
+                    "num_aromatic_connections": arom_conn,
+                    "predicted_pKa": round(pka, 2),
+                    "class": cls,
+                }
+        except Exception:
+            return None
+        return None
+
+    # Carboxylic acid derivatives: classify
+    def carboxy_features(m) -> Dict[str, Any] | None:
+        try:
+            acid = m.HasSubstructMatch(Chem.MolFromSmarts("[CX3](=O)[OX2H1]"))
+            carboxylate = m.HasSubstructMatch(Chem.MolFromSmarts("[CX3](=O)[OX1-]"))
+            ester = m.HasSubstructMatch(Chem.MolFromSmarts("[CX3](=O)[OX2][CX4]"))
+            amide = m.HasSubstructMatch(Chem.MolFromSmarts("[CX3](=O)[NX3]"))
+            acyl_halide = m.HasSubstructMatch(Chem.MolFromSmarts("[CX3](=O)[Cl,Br,I]"))
+            klass = None
+            if acid:
+                klass = "carboxylic_acid"
+            elif carboxylate:
+                klass = "carboxylate"
+            elif acyl_halide:
+                klass = "acyl_halide"
+            elif amide:
+                klass = "amide"
+            elif ester:
+                klass = "ester"
+            if klass:
+                return {"derivative_class": klass}
+        except Exception:
+            return None
+        return None
+
+    # Aryl halide: halogen identity and local substitution around the halo center
+    def aryl_halide_features(m) -> Dict[str, Any] | None:
+        try:
+            for a in m.GetAtoms():
+                if a.GetSymbol() not in ("Cl", "Br", "I"):
+                    continue
+                for nb in a.GetNeighbors():
+                    if nb.GetIsAromatic():
+                        hal = {"Cl": "Ar–Cl", "Br": "Ar–Br", "I": "Ar–I"}[a.GetSymbol()]
+                        ring_info = m.GetRingInfo()
+                        in_ring = nb.IsInRing()
+                        # count exocyclic substituents on the two ortho ring atoms (neighbors of nb excluding a)
+                        ortho_subs = 0
+                        for nb2 in nb.GetNeighbors():
+                            if nb2.GetIdx() == a.GetIdx():
+                                continue
+                            # exocyclic attachment count
+                            exo = sum(1 for nb3 in nb2.GetNeighbors() if not nb3.GetIsAromatic())
+                            ortho_subs += exo
+                        hetero_in_ring = any(at.GetIsAromatic() and at.GetAtomicNum() not in (6, 1) and at.IsInRing() for at in m.GetAtoms())
+                        return {
+                            "halogen_identity": hal,
+                            "ortho_substituent_count": int(ortho_subs),
+                            "heteroaromatic_flag": bool(hetero_in_ring),
+                        }
+        except Exception:
+            return None
+        return None
+
+    # Aggregate rule features from reactants
+    for m in r_mols:
+        if rule_feats["amine"] is None:
+            af = amine_features(m)
+            if af:
+                rule_feats["amine"] = af
+        if rule_feats["carboxylic_acid"] is None:
+            cf = carboxy_features(m)
+            if cf:
+                rule_feats["carboxylic_acid"] = cf
+        if rule_feats["aryl_halide"] is None:
+            hf = aryl_halide_features(m)
+            if hf:
+                rule_feats["aryl_halide"] = hf
+
+    feats["RULE_FEATURES"] = rule_feats
+
     return feats

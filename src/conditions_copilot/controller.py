@@ -24,6 +24,7 @@ def build_discovery_payload(rxn_smiles: str, include_dicts: bool = False) -> Dic
 
 def execute_actions(actions: list[dict], rxn_smiles: str, dataset_csv: str, dict_dir: str) -> dict:
     results = {}
+    ran_featurize = False
     for act in actions[:3]:  # budget
         tool = act.get("tool")
         args = act.get("args", {})
@@ -31,6 +32,7 @@ def execute_actions(actions: list[dict], rxn_smiles: str, dataset_csv: str, dict
         if tool == "featurize_basic":
             feats = featurize_basic.featurize_basic(rxn_smiles)
             results[cid] = {"ok": True, "features": feats}
+            ran_featurize = True
         elif tool == "retrieve_neighbors":
             k = int(args.get("k", 20))
             filters = args.get("filters", {})
@@ -47,6 +49,13 @@ def execute_actions(actions: list[dict], rxn_smiles: str, dataset_csv: str, dict
             results[cid] = {"ok": True, "note": "Use local validator entrypoint from CLI."}
         else:
             results[cid] = {"ok": False, "error": f"unknown_tool:{tool}"}
+    # Ensure we always have features available for proposals even if LLM forgot to call it
+    if not ran_featurize and all("features" not in (v or {}) for v in results.values()):
+        try:
+            feats = featurize_basic.featurize_basic(rxn_smiles)
+            results["featurize_basic_auto"] = {"ok": True, "features": feats, "note": "auto-featurize fallback"}
+        except Exception as e:
+            results["featurize_basic_auto"] = {"ok": False, "error": f"auto_featurize_failed:{e}"}
     return results
 
 def run_once(rxn_smiles: str, dataset_csv: str, dict_dir: str, system_path: str) -> dict:

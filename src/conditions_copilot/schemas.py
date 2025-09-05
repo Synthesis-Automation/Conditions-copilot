@@ -38,7 +38,7 @@ class Constraints(BaseModel):
     safety_flags: List[str] = ["no_DMF_at>120C"]
 
 class Features(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="allow")
     HALIDE_CLASS: Optional[str] = None
     NUCLEOPHILE_CLASS: Optional[str] = None
     BORON_CLASS: Optional[str] = None

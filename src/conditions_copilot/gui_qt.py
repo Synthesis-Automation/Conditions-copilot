@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os, json, subprocess, sys, html
+import os, json, subprocess, sys, html, re, ast
 from typing import Optional, Dict, Any
 
 # Try PyQt6 first, fallback to PySide6
@@ -41,6 +41,47 @@ def _json_extract(text: str) -> str:
     return text[first:last + 1] if first >= 0 and last >= 0 else text
 
 
+def _load_json_lenient(text: str) -> Dict[str, Any]:
+    """Attempt to parse JSON with repairs for common LLM issues.
+    Steps: extract outermost JSON, normalize quotes, remove trailing commas,
+    convert Python literals, and finally try ast.literal_eval as a last resort.
+    """
+    s = _json_extract(text.strip())
+    # First pass: strict JSON
+    try:
+        return json.loads(s)
+    except Exception:
+        pass
+
+    t = s.strip()
+    # Strip Markdown code fences
+    if t.startswith("```") and t.endswith("```"):
+        t = t.strip().strip("`")
+        if "\n" in t:
+            t = t.split("\n", 1)[1]
+    # Normalize smart quotes
+    t = t.replace("“", '"').replace("”", '"').replace("’", "'").replace("‘", "'")
+    # Replace Python literals with JSON
+    t2 = re.sub(r"\bTrue\b", "true", t)
+    t2 = re.sub(r"\bFalse\b", "false", t2)
+    t2 = re.sub(r"\bNone\b", "null", t2)
+    # Remove trailing commas before ] or }
+    t2 = re.sub(r",\s*([\]}])", r"\1", t2)
+    try:
+        return json.loads(t2)
+    except Exception:
+        pass
+
+    # Last resort: Python literal -> JSON
+    try:
+        obj = ast.literal_eval(t2)
+        # Ensure round-trippable
+        json.dumps(obj)
+        return obj
+    except Exception as e:
+        raise RuntimeError(f"Failed to parse LLM JSON after repairs: {e}")
+
+
 def call_llm_gui(payload: Dict[str, Any], system_path: str, llm_cmd: Optional[str], parent: QWidget) -> Dict[str, Any]:
     system_txt = _read_text(system_path)
     # OpenAI-compatible path if no shell cmd and API key present (OpenAI or DashScope)
@@ -73,9 +114,9 @@ def call_llm_gui(payload: Dict[str, Any], system_path: str, llm_cmd: Optional[st
         if not ok or not text.strip():
             raise RuntimeError("No JSON pasted from LLM.")
         try:
-            return json.loads(_json_extract(text))
+            return _load_json_lenient(text)
         except Exception as e:
-            raise RuntimeError(f"Failed to parse LLM JSON: {e}")
+            raise RuntimeError(str(e))
 
     # Non-interactive: external command
     prompt = f"SYSTEM:\n{system_txt}\n\nUSER:\n{json.dumps(payload)}"
@@ -85,9 +126,9 @@ def call_llm_gui(payload: Dict[str, Any], system_path: str, llm_cmd: Optional[st
         raise RuntimeError(f"LLM command failed: {proc.stderr.decode('utf-8', 'ignore')}")
     out = proc.stdout.decode("utf-8", "ignore").strip()
     try:
-        return json.loads(_json_extract(out))
+        return _load_json_lenient(out)
     except Exception as e:
-        raise RuntimeError(f"Failed to parse LLM JSON: {e}\nRaw: {out[:4000]}")
+        raise RuntimeError(f"{e}\nRaw: {out[:4000]}")
 
 
 class ChatWindow(QMainWindow):
