@@ -1,0 +1,11 @@
+ConditionCore,tails,yield,substrate_tags,notes
+Pd/SPhos,"Cs2CO3/1,4-dioxane/95C",0.78,"Ar–Br|aniline","Robust for Ar–Br + aniline"
+Pd/XPhos,"K3PO4/toluene/100C",0.75,"Ar–Br|aniline","Bulky ligand; optional 10% DMA"
+Ni/dtbbpy,"NaOtBu/1,4-dioxane/80C",0.68,"Ar–Br|aniline","Stronger base"
+Pd/BrettPhos,"K2CO3/DMA/90C",0.72,"Ar–Cl|aniline","For less reactive aryl chlorides"
+"Cu/1,10-phenanthroline","K2CO3/DMSO/110C",0.45,"Ar–Cl|aliphatic amine","Ullmann-type conditions"
+Pd/XPhos,"K3PO4/toluene/90C",0.62,"Ar–Br|morpholine","Heteroatom nucleophile"
+Pd/SPhos,"Cs2CO3/1,4-dioxane/85C",0.65,"Ar–I|aniline","Iodides are more reactive"
+Ni/dtbbpy,"NaOtBu/1,4-dioxane/70C",0.50,"Ar–Cl|aniline","Lower temp variant"
+Pd/SPhos,"Cs2CO3/1,4-dioxane/100C",0.80,"Ar–Br|aniline|EWG","EWG substrate"
+Pd/XPhos,"K3PO4/toluene/95C",0.60,"Ar–Br|aniline","Baseline variant"

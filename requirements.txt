@@ -1,4 +1,6 @@
 pydantic>=2.6
 pandas>=2.1
+# OpenAI client for automatic LLM calls (optional; used if OPENAI_API_KEY is set)
+openai>=1.40.0
 # rdkit-pypi is optional; uncomment to enable richer featurization
 # rdkit-pypi>=2022.9.5

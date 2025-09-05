@@ -60,7 +60,8 @@ conditions-copilot/
   │      ├─ ml.py               # Tiny yield predictor stub
   │      └─ validator.py        # L0–L3 validator + ValidationReport
   ├─ data/dicts/*.json           # Default dictionaries
-  ├─ examples/                   # Example payload/expected replies
+  ├─ examples/                   # Example payload/expected replies and datasets
+  │  ├─ datasets/demo_neighbors.csv
   ├─ requirements.txt
   └─ README.md
 ```
@@ -74,3 +75,27 @@ conditions-copilot/
 - Launch: `conditions-copilot-gui`
 - Layout: top transcript (system/tools/LLM responses), bottom input for your reaction SMILES.
 - LLM: set `LLM_CMD` or use the GUI “LLM Cmd…” button. If empty, the app prompts you to paste the JSON replies.
+
+## OpenAI-Compatible Integration
+- The app talks to OpenAI-compatible chat completion APIs (OpenAI or Aliyun DashScope).
+- Set either:
+  - `OPENAI_API_KEY` (+ optional `OPENAI_MODEL`, `OPENAI_BASE_URL`), or
+  - `DASHSCOPE_API_KEY` (+ optional `DASHSCOPE_MODEL`, `DASHSCOPE_BASE_URL`).
+- Defaults if unset:
+  - `MODEL`: `deepseek-v3.1`
+  - `BASE_URL`: DashScope compatible endpoint when `DASHSCOPE_API_KEY` is present.
+- Safety prompt: both CLI and GUI ask for confirmation before sending the payload to the API.
+- JSON-only: the client requests JSON responses and enforces JSON parsing.
+
+PowerShell example (DashScope / DeepSeek):
+
+```
+$env:DASHSCOPE_API_KEY = '<your key>'
+$env:DASHSCOPE_MODEL   = 'deepseek-v3.1'
+# Optional (uses this by default when DASHSCOPE_API_KEY is set):
+$env:DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+```
+
+## Datasets
+- A small example dataset is provided at `examples/datasets/demo_neighbors.csv`.
+- CLI default `--dataset` points there; you can override with your own CSV.

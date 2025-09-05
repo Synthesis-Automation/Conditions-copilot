@@ -23,6 +23,7 @@ except Exception:
 from .controller import build_discovery_payload, execute_actions
 from .schemas import ProposalsRequest
 from .tools import dicts as dicts_mod, validator
+from .llm_prompting.client import call_openai
 
 
 def _read_text(path: str) -> str:
@@ -42,6 +43,27 @@ def _json_extract(text: str) -> str:
 
 def call_llm_gui(payload: Dict[str, Any], system_path: str, llm_cmd: Optional[str], parent: QWidget) -> Dict[str, Any]:
     system_txt = _read_text(system_path)
+    # OpenAI-compatible path if no shell cmd and API key present (OpenAI or DashScope)
+    if not llm_cmd:
+        model = os.environ.get("OPENAI_MODEL") or os.environ.get("DASHSCOPE_MODEL") or "deepseek-v3.1"
+        base_url = (
+            os.environ.get("OPENAI_BASE_URL")
+            or os.environ.get("DASHSCOPE_BASE_URL")
+            or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        )
+        mb = QMessageBox(parent)
+        mb.setIcon(QMessageBox.Icon.Question)
+        mb.setWindowTitle("Send to API?")
+        mb.setText(f"Send payload to model '{model}'?")
+        mb.setInformativeText("Set OPENAI_MODEL/OPENAI_BASE_URL or DASHSCOPE_MODEL/DASHSCOPE_BASE_URL via environment.")
+        mb.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if mb.exec() == QMessageBox.StandardButton.Yes:
+            try:
+                return call_openai(payload, system_txt, model=model, base_url=base_url, json_mode=True)
+            except Exception as e:
+                raise RuntimeError(str(e))
+        # fall through to paste mode if declined
+
     if not llm_cmd:
         # Interactive paste dialog
         prompt_preview = json.dumps(payload, indent=2)
@@ -75,7 +97,7 @@ class ChatWindow(QMainWindow):
 
         # Defaults
         base_dir = os.path.dirname(__file__)
-        self.dataset_csv = os.path.join(base_dir, "..", "..", "data", "demo_neighbors.csv")
+        self.dataset_csv = os.path.join(base_dir, "..", "..", "examples", "datasets", "demo_neighbors.csv")
         self.dict_dir = os.path.join(base_dir, "..", "..", "data", "dicts")
         self.system_path = os.path.join(base_dir, "llm_prompting", "system.txt")
         self.llm_cmd = os.environ.get("LLM_CMD", "")
@@ -219,4 +241,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

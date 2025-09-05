@@ -11,7 +11,7 @@ def main():
 
     p2 = sub.add_parser("run", help="Run one discovery→propose→validate loop (interactive LLM by default)")
     p2.add_argument("--rxn", required=True, help="Reaction SMILES")
-    p2.add_argument("--dataset", default=os.path.join(os.path.dirname(__file__), "..", "..", "data", "demo_neighbors.csv"))
+    p2.add_argument("--dataset", default=os.path.join(os.path.dirname(__file__), "..", "..", "examples", "datasets", "demo_neighbors.csv"))
     p2.add_argument("--dictdir", default=os.path.join(os.path.dirname(__file__), "..", "..", "data", "dicts"))
     p2.add_argument("--system", default=os.path.join(os.path.dirname(__file__), "llm_prompting", "system.txt"))
 
