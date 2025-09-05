@@ -70,3 +70,7 @@ conditions-copilot/
 - Replace demo neighbors with your dataset (CSV/Parquet) in `tools/retrieval.py`.
 - Tight schemas + validator keep the LLM honest (JSON-only, allow-lists, safety rules).
 
+## GUI (Qt6)
+- Launch: `conditions-copilot-gui`
+- Layout: top transcript (system/tools/LLM responses), bottom input for your reaction SMILES.
+- LLM: set `LLM_CMD` or use the GUI “LLM Cmd…” button. If empty, the app prompts you to paste the JSON replies.

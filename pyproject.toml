@@ -23,10 +23,10 @@ rdkit = [
 
 [project.scripts]
 conditions-copilot = "conditions_copilot.cli:main"
+conditions-copilot-gui = "conditions_copilot.gui_qt:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
