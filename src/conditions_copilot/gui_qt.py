@@ -1,12 +1,12 @@
 from __future__ import annotations
-import os, json, subprocess, sys
+import os, json, subprocess, sys, html
 from typing import Optional, Dict, Any
 
 # Try PyQt6 first, fallback to PySide6
 try:
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-        QPlainTextEdit, QLineEdit, QPushButton, QFileDialog, QMessageBox,
+        QTextEdit, QLineEdit, QPushButton, QFileDialog, QMessageBox,
         QInputDialog, QLabel
     )
     from PyQt6.QtCore import Qt
@@ -14,7 +14,7 @@ try:
 except Exception:
     from PySide6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-        QPlainTextEdit, QLineEdit, QPushButton, QFileDialog, QMessageBox,
+        QTextEdit, QLineEdit, QPushButton, QFileDialog, QMessageBox,
         QInputDialog, QLabel
     )
     from PySide6.QtCore import Qt
@@ -107,8 +107,31 @@ class ChatWindow(QMainWindow):
         layout = QVBoxLayout(central)
 
         # Transcript
-        self.transcript = QPlainTextEdit(self)
+        self.transcript = QTextEdit(self)
         self.transcript.setReadOnly(True)
+        # Monospace for JSON readability; dark background for contrast
+        self.transcript.setStyleSheet(
+            "QTextEdit {"
+            "  font-family: Consolas, Menlo, monospace;"
+            "  font-size: 12px;"
+            "  background-color: #0d1117;"
+            "  color: #e6edf3;"
+            "  border: 1px solid #30363d;"
+            "  border-radius: 6px;"
+            "  padding: 6px;"
+            "}"
+        )
+        # High-contrast role colors (optimized for dark/gray backgrounds)
+        self._role_colors = {
+            "SYSTEM": "#58a6ff",     # bright blue
+            "LLM": "#3fb950",        # bright green
+            "USER": "#d2a8ff",       # bright purple
+            "TOOLS": "#ffb347",      # bright orange
+            "VALIDATION": "#2dd4bf", # bright teal
+            "INFO": "#c9d1d9",       # light gray
+        }
+        # Default body text color for readability on dark backgrounds
+        self._body_color = "#e6edf3"
         self.transcript.setPlaceholderText("System responses and tool results will appear here…")
         layout.addWidget(self.transcript, stretch=1)
 
@@ -154,7 +177,20 @@ class ChatWindow(QMainWindow):
             self.lbl_llm.setText(f"LLM: API {model} @ {base_url}")
 
     def _append(self, role: str, content: str):
-        self.transcript.appendPlainText(f"[{role}]\n{content}\n")
+        role_u = (role or "").upper()
+        color = self._role_colors.get(role_u, "#333333")
+        role_html = f'<span style="color:{color}; font-weight:700">[' + html.escape(role) + ']</span>'
+        body_html = html.escape(content)
+        # High-contrast body text with role-colored left border for separation
+        block = (
+            f"<div style='border-left:4px solid {color}; padding-left:8px; margin:6px 0'>"
+            f"{role_html}<br><pre style='margin:0; color:{self._body_color}'>{body_html}</pre>"
+            f"</div>"
+        )
+        cursor = self.transcript.textCursor()
+        cursor.movePosition(cursor.MoveOperation.End)
+        self.transcript.setTextCursor(cursor)
+        self.transcript.insertHtml(block + "<br/>")
         self.transcript.verticalScrollBar().setValue(self.transcript.verticalScrollBar().maximum())
 
     def choose_dataset(self):

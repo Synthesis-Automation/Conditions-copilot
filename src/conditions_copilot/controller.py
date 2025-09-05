@@ -41,8 +41,8 @@ def execute_actions(actions: list[dict], rxn_smiles: str, dataset_csv: str, dict
             dicts = dicts_mod.load_dicts(dict_dir)
             results[cid] = {"ok": True, "dictionaries": dicts}
         elif tool == "predict_yield":
-            from .tools.ml import predict_yield_stub
-            results[cid] = {"ok": True, **predict_yield_stub(rxn_smiles, args.get("conditions", {}))}
+            from .tools.ml import predict_yield
+            results[cid] = {"ok": True, **predict_yield(rxn_smiles, args.get("conditions", {}))}
         elif tool == "validate_proposals":
             results[cid] = {"ok": True, "note": "Use local validator entrypoint from CLI."}
         else:
